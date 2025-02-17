@@ -5,7 +5,7 @@ interface Movie {
   imdbID: string;
   onClick: () => void;
 }
-const ResultList: React.FC<Movie> = ({
+const MovieCard: React.FC<Movie> = ({
   Title,
   Year,
   Poster,
@@ -32,4 +32,4 @@ const ResultList: React.FC<Movie> = ({
   );
 };
 
-export default ResultList;
+export default MovieCard;
