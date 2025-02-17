@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 interface MovieDataProps {
@@ -22,34 +23,31 @@ interface MovieDetails {
 }
 
 const MovieData: React.FC<MovieDataProps> = ({ imdbID, onClose }) => {
-  const [movie, setMovie] = useState<MovieDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const apiKey = import.meta.env.VITE_API_KEY;
+  const apiUrl = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    const fetchMovieDetails = async () => {
-      try {
-        const apiKey = import.meta.env.VITE_API_KEY;
-        const apiUrl = import.meta.env.VITE_API_URL;
-        const response = await axios.get(`${apiUrl}${apiKey}&i=${imdbID}`);
-        setMovie(response.data);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Error al cargar los detalles de la película.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchMovieDetails = async (): Promise<MovieDetails> => {
+    const response = await axios.get(`${apiUrl}${apiKey}&i=${imdbID}`);
+    return response.data; // Asegúrate de que la API devuelva un objeto que coincida con MovieDetails
+  };
 
-    fetchMovieDetails();
-  }, [imdbID]);
+  const {
+    data: movie,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<MovieDetails, Error>({
+    queryKey: ["movieDetails", imdbID], // Clave única para la consulta
+    queryFn: fetchMovieDetails, // Función que realiza la solicitud
+    staleTime: 1000 * 60 * 5, // Los datos se consideran frescos durante 5 minutos
+  });
 
   if (isLoading) {
     return <p>Cargando...</p>;
   }
 
-  if (error) {
-    return <p>{error}</p>;
+  if (isError) {
+    return <p>Error: {error.message}</p>;
   }
 
   if (!movie) {
