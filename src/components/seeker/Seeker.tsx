@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import InputSeeker from "./InputSeeker";
 import MovieCard from "./MovieCard";
@@ -23,11 +24,32 @@ interface SeekerProps {
 
 const Seeker: React.FC<SeekerProps> = ({ onMovieClick }) => {
   const [inputValue, setInputValue] = useState("");
-  const [movies, setMovies] = useState<ApiResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+
+  const apiKey = import.meta.env.VITE_API_KEY;
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  const fetchMovies = async () => {
+    if (inputValue.trim() === "") return null;
+    const response = await axios.get<ApiResponse>(
+      `${apiUrl}${apiKey}&s=${inputValue}&page=${currentPage}`
+    );
+    return response.data;
+  };
+
+  const {
+    data: movies,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["movies", inputValue, currentPage],
+    queryFn: fetchMovies,
+    enabled: inputValue.trim() !== "",
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const totalPages = movies ? Math.ceil(parseInt(movies.totalResults) / 10) : 0;
 
   const changeInputValue = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
@@ -40,39 +62,6 @@ const Seeker: React.FC<SeekerProps> = ({ onMovieClick }) => {
       behavior: "smooth",
     });
   };
-
-  useEffect(() => {
-    const searchMovie = setTimeout(() => {
-      if (inputValue.trim() === "") {
-        setMovies(null);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      const apiKey = import.meta.env.VITE_API_KEY;
-      const apiUrl = import.meta.env.VITE_API_URL;
-      axios
-        .get<ApiResponse>(
-          `${apiUrl}${apiKey}&s=${inputValue}&page=${currentPage}`
-        )
-        .then((response) => {
-          setMovies(response.data);
-          const totalResults = parseInt(response.data.totalResults);
-          setTotalPages(Math.ceil(totalResults / 10));
-        })
-        .catch((err) => {
-          console.error("Error fetching data:", err);
-          setError("Error al cargar los datos. Inténtalo de nuevo.");
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }, 500);
-
-    return () => clearTimeout(searchMovie);
-  }, [inputValue, currentPage]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -97,7 +86,11 @@ const Seeker: React.FC<SeekerProps> = ({ onMovieClick }) => {
       {isLoading && (
         <p className="text-center text-gray-600 mt-4">Cargando...</p>
       )}
-      {error && <p className="text-center text-red-500 mt-4">{error}</p>}
+      {isError && (
+        <p className="text-center text-red-500 mt-4">
+          Error: {error instanceof Error ? error.message : "Error desconocido"}
+        </p>
+      )}
 
       {movies && movies.Response === "True" ? (
         <>
@@ -115,7 +108,7 @@ const Seeker: React.FC<SeekerProps> = ({ onMovieClick }) => {
           </div>
 
           {/* Controles de paginación */}
-          <div className="flex justify-center items-center mt-6 space-x-4 ">
+          <div className="flex justify-center items-center mt-6 space-x-4">
             <button
               onClick={handlePreviousPage}
               disabled={currentPage === 1}
