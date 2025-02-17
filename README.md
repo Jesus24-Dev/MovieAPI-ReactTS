@@ -17,10 +17,12 @@
 ## Tecnologías utilizadas 🛠️
 
 - **React**: Biblioteca de JavaScript para construir interfaces de usuario.
-- **TypeScript**: Lenguaje que añade tipos estáticos a JavaScript.
-- **TailwindCSS**: Framework de CSS para diseñar la interfaz de usuario.
+- **TypeScript**: Lenguaje que añade tipos estáticos a JavaScript para mejorar la calidad del código.
+- **TailwindCSS**: Framework de CSS para diseñar la interfaz de usuario de manera rápida y eficiente.
 - **Axios**: Librería para realizar solicitudes HTTP a la API de OMDb.
-- **Netlify**: Plataforma para desplegar aplicaciones web.
+- **TanStack (React Query)**: Librería para gestionar el estado asíncrono, manejar caché y sincronizar datos con el servidor.
+- **Headless UI**: Librería de componentes accesibles y sin estilos para construir interfaces modernas (utilizada para el modal).
+- **Netlify**: Plataforma para desplegar aplicaciones web de manera sencilla y rápida.
 
 ---
 
